@@ -51,6 +51,18 @@ class Vehicle(models.Model):
     reviews_count = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # --- technical specs
+    battery_capacity = models.CharField(max_length=60, blank=True)
+    weight_kg = models.DecimalField(
+        max_digits=4, decimal_places=1, null=True, blank=True
+    )
+    motor = models.CharField(max_length=120, blank=True)
+    brakes = models.CharField(max_length=120, blank=True)
+    charge_time_h = models.DecimalField(
+        max_digits=3, decimal_places=1, null=True, blank=True
+    )
+    features = models.JSONField(default=list, blank=True)
+    included_accessories = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["name"]  # noqa: RUF012

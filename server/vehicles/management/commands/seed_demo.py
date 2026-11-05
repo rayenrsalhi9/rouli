@@ -164,6 +164,123 @@ VEHICLES = [
     },
 ]
 
+SPECS = {
+    "cowboy-4-st": {
+        "battery_capacity": "360 Wh amovible",
+        "weight_kg": Decimal("18.9"),
+        "motor": "Moteur roue arrière Cowboy 250W",
+        "brakes": "Freins à disques hydrauliques",
+        "charge_time_h": Decimal("3.5"),
+        "features": [
+            "Détection automatique de la puissance",
+            "Batterie amovible",
+            "Application Cowboy avec GPS et antivol",
+            "Cadre bas très accessible",
+        ],
+        "included_accessories": [
+            "Casque urbain certifié CE",
+            "Antivol pliable haute sécurité",
+            "Garde-boues avant et arrière",
+            "Éclairage LED avant et arrière",
+        ],
+    },
+    "michael-blast-soda": {
+        "battery_capacity": "481 Wh",
+        "weight_kg": Decimal("26.0"),
+        "motor": "Moteur roue arrière 250W",
+        "brakes": "Freins à disques hydrauliques",
+        "charge_time_h": Decimal("4.0"),
+        "features": [
+            "Design café racer néo-rétro",
+            "Selle large confort",
+            "Pneus larges style cruiser",
+            "Assistance douce et silencieuse",
+        ],
+        "included_accessories": [
+            "Casque vintage avec lanières cuir",
+            "Antivol de cadre",
+            "Rétroviseurs ronds chromés",
+            "Porte-bidon cuir",
+        ],
+    },
+    "trek-verve-plus-3-lowstep": {
+        "battery_capacity": "525 Wh",
+        "weight_kg": Decimal("24.1"),
+        "motor": "Bosch Active Line Plus 250W",
+        "brakes": "Freins à disques hydrauliques",
+        "charge_time_h": Decimal("4.5"),
+        "features": [
+            "Fourche suspendue confort",
+            "Position de conduite relevée",
+            "Garde-boues, porte-bagages et éclairage intégrés",
+            "Assistance Bosch fluide",
+        ],
+        "included_accessories": [
+            "Casque urbain avec visière",
+            "Antivol à clé renforcé",
+            "Porte-bidon",
+            "Sacoche de cadre 8L",
+        ],
+    },
+    "cube-touring-hybrid-one-625": {
+        "battery_capacity": "625 Wh",
+        "weight_kg": Decimal("25.4"),
+        "motor": "Bosch Performance Line CX 250W",
+        "brakes": "Freins à disques hydrauliques Shimano",
+        "charge_time_h": Decimal("4.5"),
+        "features": [
+            "Batterie Bosch 625 Wh",
+            "Moteur central puissant",
+            "Équipement trekking complet",
+            "Pneus polyvalents route et chemin",
+        ],
+        "included_accessories": [
+            "Double sacoche arrière étanche",
+            "Casque trekking avec LED arrière",
+            "Antivol certifié Sold Secure",
+            "Chargeur Bosch rapide",
+        ],
+    },
+    "segway-ninebot-max-g2": {
+        "battery_capacity": "551 Wh",
+        "weight_kg": Decimal("24.3"),
+        "motor": "Moteur roue arrière 900W crête / 450W nominal",
+        "brakes": "Frein avant à tambour, frein arrière électronique et EBS",
+        "charge_time_h": Decimal("6.0"),
+        "features": [
+            "Autonomie jusqu’à 70 km",
+            "Double suspension",
+            'Pneus 10" tubeless auto-réparants',
+            "Clignotants et éclairage intégrés",
+        ],
+        "included_accessories": [
+            "Casque pliable certifié CE",
+            "Antivol à code",
+            "Chargeur officiel",
+            "Sacoche de guidon étanche",
+        ],
+    },
+    "segway-ninebot-e3-pro-e": {
+        "battery_capacity": "368 Wh",
+        "weight_kg": Decimal("21.5"),
+        "motor": "Moteur 800W",
+        "brakes": "Frein avant à tambour, frein arrière électronique et EBS",
+        "charge_time_h": Decimal("5.0"),
+        "features": [
+            "Double suspension avant et arrière",
+            "Autonomie jusqu’à 55 km",
+            "Moteur 800W",
+            "Confort haut de gamme",
+        ],
+        "included_accessories": [
+            "Casque premium avec LED arrière",
+            "Antivol haute sécurité",
+            "Chargeur rapide",
+            "Sac de transport",
+        ],
+    },
+}
+
 
 class Command(BaseCommand):
     help = "Load the Rouli Lite demo data (safe to run several times)."
@@ -187,6 +304,7 @@ class Command(BaseCommand):
             defaults = {k: v for k, v in data.items() if k != "slug"}
             defaults["agency"] = agencies[data["agency"]]
             defaults["category"] = categories[data["category"]]
+            defaults.update(SPECS[data["slug"]])
             Vehicle.objects.update_or_create(slug=data["slug"], defaults=defaults)
 
         self.stdout.write(

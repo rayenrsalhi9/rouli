@@ -33,3 +33,16 @@ class VehicleSerializer(serializers.ModelSerializer):
             "rating",
             "reviews_count",
         ]
+
+
+class VehicleDetailSerializer(VehicleSerializer):
+    class Meta(VehicleSerializer.Meta):
+        fields = VehicleSerializer.Meta.fields + [
+            "battery_capacity",
+            "weight_kg",
+            "motor",
+            "brakes",
+            "charge_time_h",
+            "features",
+            "included_accessories",
+        ]
