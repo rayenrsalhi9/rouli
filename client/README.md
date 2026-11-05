@@ -35,7 +35,8 @@ See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rule
 
 Start Django on `127.0.0.1:8000` and run `pnpm dev` from this directory. Vite
 forwards `/api` requests to Django. To use a different API base URL, set
-`VITE_API_BASE_URL` before starting Vite.
+`VITE_API_URL` before starting Vite (for example,
+`VITE_API_URL=http://127.0.0.1:8000/api`).
 
 Vehicle photos are served from `public/bikes/` and `public/scooters/`. The
 client resolves the API's `/vehicles/<filename>` image paths to those folders

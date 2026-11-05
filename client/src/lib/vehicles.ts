@@ -1,12 +1,22 @@
-export interface VehicleCategory {
+export interface Category {
   slug: string
   label: string
 }
 
-export interface VehicleAgency {
+export interface AgencySummary {
   slug: string
   name: string
   short_name: string
+}
+
+export interface Agency extends AgencySummary {
+  id: number
+  address: string
+  phone: string
+  opening_hours: string
+  description: string
+  image: string
+  vehicles_count: number
 }
 
 export interface Vehicle {
@@ -14,8 +24,8 @@ export interface Vehicle {
   slug: string
   name: string
   vehicle_type: 'bike' | 'scooter'
-  category: VehicleCategory
-  agency: VehicleAgency
+  category: Category
+  agency: AgencySummary
   price_per_day_dt: number
   total_units: number
   range_km: number
@@ -27,6 +37,16 @@ export interface Vehicle {
   reviews_count: number
 }
 
+export interface VehicleDetail extends Vehicle {
+  battery_capacity: string
+  weight_kg: number | null
+  motor: string
+  brakes: string
+  charge_time_h: number | null
+  features: string[]
+  included_accessories: string[]
+}
+
 export interface VehiclePage {
   count: number
   next: string | null
@@ -34,7 +54,7 @@ export interface VehiclePage {
   results: Vehicle[]
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
 
 export class ApiError extends Error {
   readonly status: number
@@ -62,12 +82,24 @@ export function getVehicles(
   return request<VehiclePage>(`/vehicles/${query ? `?${query}` : ''}`, signal)
 }
 
-export function getVehicle(slug: string, signal?: AbortSignal): Promise<Vehicle> {
-  return request<Vehicle>(`/vehicles/${encodeURIComponent(slug)}/`, signal)
+export function getVehicle(slug: string, signal?: AbortSignal): Promise<VehicleDetail> {
+  return request<VehicleDetail>(`/vehicles/${encodeURIComponent(slug)}/`, signal)
 }
 
-export function getVehicleCategories(signal?: AbortSignal): Promise<VehicleCategory[]> {
-  return request<VehicleCategory[]>('/categories/', signal)
+export function getRelatedVehicles(slug: string, signal?: AbortSignal): Promise<Vehicle[]> {
+  return request<Vehicle[]>(`/vehicles/${encodeURIComponent(slug)}/related/`, signal)
+}
+
+export function getAgencies(signal?: AbortSignal): Promise<Agency[]> {
+  return request<Agency[]>('/agencies/', signal)
+}
+
+export function getAgency(slug: string, signal?: AbortSignal): Promise<Agency> {
+  return request<Agency>(`/agencies/${encodeURIComponent(slug)}/`, signal)
+}
+
+export function getCategories(signal?: AbortSignal): Promise<Category[]> {
+  return request<Category[]>('/categories/', signal)
 }
 
 export function getErrorMessage(error: unknown): string {
