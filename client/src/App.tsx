@@ -1,13 +1,18 @@
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
+import SiteShell from '@/components/SiteShell'
 import Home from '@/pages/Home'
 import VehicleDetail from '@/pages/VehicleDetail'
 import Vehicles from '@/pages/Vehicles'
 
 function NotFound() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-2">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-    </div>
+    <SiteShell>
+      <div className="detail-state">
+        <h1>Cette page n’existe pas.</h1>
+        <p>Le véhicule recherché est peut-être ailleurs.</p>
+        <Link className="action-link" to="/vehicules">Voir les véhicules</Link>
+      </div>
+    </SiteShell>
   )
 }
 
@@ -16,7 +21,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/vehicules" element={<Vehicles />} />
-      <Route path="/vehicules/:id" element={<VehicleDetail />} />
+      <Route path="/vehicules/:slug" element={<VehicleDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
