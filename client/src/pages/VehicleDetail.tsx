@@ -8,10 +8,11 @@ import {
   ApiError,
   formatDailyPrice,
   getErrorMessage,
+  getRelatedVehicles,
   getVehicle,
-  getVehicles,
   vehicleTypeLabel,
   type Vehicle,
+  type VehicleDetail,
 } from '@/lib/vehicles'
 
 function VehicleDetail() {
@@ -19,16 +20,18 @@ function VehicleDetail() {
   const [result, setResult] = useState<{
     slug: string
     retry: number
-    vehicle?: Vehicle
+    vehicle?: VehicleDetail
     error?: string
     status?: number
   } | null>(null)
   const [retry, setRetry] = useState(0)
   const [relatedState, setRelatedState] = useState<{
     slug: string
+    retry: number
     vehicles?: Vehicle[]
     error?: string
   } | null>(null)
+  const [retryRelated, setRetryRelated] = useState(0)
 
   useEffect(() => {
     if (!slug) return
@@ -59,25 +62,38 @@ function VehicleDetail() {
   useEffect(() => {
     if (!vehicle) return
     const controller = new AbortController()
-    const params = new URLSearchParams({ category: vehicle.category.slug })
-
-    getVehicles(params, controller.signal)
-      .then((page) => {
+    getRelatedVehicles(vehicle.slug, controller.signal)
+      .then((vehicles) => {
         setRelatedState({
           slug: vehicle.slug,
-          vehicles: page.results.filter((item) => item.slug !== vehicle.slug).slice(0, 3),
+          retry: retryRelated,
+          vehicles,
         })
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
-          setRelatedState({ slug: vehicle.slug, error: getErrorMessage(reason) })
+          setRelatedState({ slug: vehicle.slug, retry: retryRelated, error: getErrorMessage(reason) })
         }
       })
 
     return () => controller.abort()
-  }, [vehicle])
+  }, [retryRelated, vehicle])
 
-  const related = vehicle && relatedState?.slug === vehicle.slug ? relatedState : null
+  const related =
+    vehicle && relatedState?.slug === vehicle.slug && relatedState.retry === retryRelated
+      ? relatedState
+      : null
+  const specs = vehicle
+    ? [
+        { label: 'Batterie', value: vehicle.battery_capacity },
+        { label: 'Poids', value: vehicle.weight_kg === null ? '' : `${vehicle.weight_kg} kg` },
+        { label: 'Moteur', value: vehicle.motor },
+        { label: 'Freins', value: vehicle.brakes },
+        { label: 'Temps de charge', value: vehicle.charge_time_h === null ? '' : `${vehicle.charge_time_h} h` },
+        { label: 'Autonomie', value: `${vehicle.range_km} km` },
+        { label: 'Vitesse max.', value: `${vehicle.max_speed_kmh} km/h` },
+      ].filter((spec) => spec.value.trim() !== '')
+    : []
 
   if (!vehicle) {
     return (
@@ -141,44 +157,56 @@ function VehicleDetail() {
               <p className="detail-copy__description">{vehicle.description}</p>
             )}
             <section className="detail-specs" aria-label="Caractéristiques">
-              <div className="detail-spec">
-                <strong>{vehicle.range_km} km</strong>
-                <span>Autonomie</span>
-              </div>
-              <div className="detail-spec">
-                <strong>{vehicle.max_speed_kmh} km/h</strong>
-                <span>Vitesse max.</span>
-              </div>
-              <div className="detail-spec">
-                <strong>{vehicle.total_units}</strong>
-                <span>En flotte</span>
-              </div>
+              {specs.map((spec) => (
+                <div className="detail-spec" key={spec.label}>
+                  <strong>{spec.value}</strong>
+                  <span>{spec.label}</span>
+                </div>
+              ))}
             </section>
             <section className="detail-agency">
               <h2>Disponible chez {vehicle.agency.short_name}</h2>
-              <p>{vehicle.agency.name}</p>
+              <p><Link to={`/agences/${vehicle.agency.slug}`}>{vehicle.agency.name}</Link></p>
             </section>
             <div className="detail-actions">
               <Link className="action-link" to="/vehicules">Parcourir la flotte</Link>
             </div>
           </article>
         </div>
-        {(!related || related.error || (related.vehicles && related.vehicles.length > 0)) && (
-          <section className="related-section" aria-labelledby="related-title">
-            <h2 id="related-title">À découvrir aussi</h2>
-            {!related && <p role="status">Recherche de véhicules proches…</p>}
-            {related?.error && (
-              <p role="alert">Les véhicules similaires n’ont pas pu être chargés : {related.error}</p>
-            )}
-            {related?.vehicles && related.vehicles.length > 0 && (
-              <div className="catalog-grid">
-                {related.vehicles.map((item) => (
-                  <VehicleCard key={item.slug} vehicle={item} />
-                ))}
-              </div>
-            )}
+        {vehicle.features.length > 0 && (
+          <section className="detail-list-section" aria-labelledby="features-title">
+            <h2 id="features-title">Équipements et fonctionnalités</h2>
+            <ul>{vehicle.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
           </section>
         )}
+        {vehicle.included_accessories.length > 0 && (
+          <section className="detail-list-section" aria-labelledby="accessories-title">
+            <h2 id="accessories-title">Accessoires inclus</h2>
+            <ul>{vehicle.included_accessories.map((item) => <li key={item}>{item}</li>)}</ul>
+          </section>
+        )}
+        <section className="related-section" aria-labelledby="related-title">
+          <h2 id="related-title">Véhicules similaires</h2>
+          {!related && <p role="status">Chargement des véhicules similaires…</p>}
+          {related?.error && (
+            <div role="alert">
+              <p>Les véhicules similaires n’ont pas pu être chargés : {related.error}</p>
+              <button type="button" className="action-link" onClick={() => setRetryRelated((value) => value + 1)}>
+                Réessayer
+              </button>
+            </div>
+          )}
+          {related?.vehicles?.length === 0 && (
+            <p>Aucun véhicule similaire n’est disponible pour le moment.</p>
+          )}
+          {related?.vehicles && related.vehicles.length > 0 && (
+            <div className="catalog-grid">
+              {related.vehicles.map((item) => (
+                <VehicleCard key={item.slug} vehicle={item} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </SiteShell>
   )

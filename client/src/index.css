@@ -729,6 +729,30 @@ figure[data-slot='vehicle-image'] {
   margin-bottom: var(--space-lg);
 }
 
+.related-section [role='alert'] p {
+  margin-bottom: var(--space-md);
+}
+
+.detail-list-section {
+  margin-top: var(--section-gap-s);
+  padding-top: var(--space-lg);
+  border-top: var(--rule-heavy) solid var(--color-ink);
+}
+
+.detail-list-section h2 {
+  margin-bottom: var(--space-md);
+  font-size: var(--text-section);
+}
+
+.detail-list-section ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-sm) var(--space-xl);
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-ink-2);
+}
+
 .detail-state p {
   margin-top: var(--space-md);
   color: var(--color-ink-2);
