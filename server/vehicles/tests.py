@@ -1,6 +1,7 @@
 from agencies.models import Agency
 from django.core.management import call_command
 from django.test import TestCase
+from rest_framework.test import APITestCase
 
 from .models import Category, Vehicle
 
@@ -16,3 +17,57 @@ class SeedDemoTests(TestCase):
         call_command("seed_demo", verbosity=0)
         call_command("seed_demo", verbosity=0)
         self.assertEqual(Vehicle.objects.count(), 6)
+
+
+class VehicleApiTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_demo", verbosity=0)
+
+    def test_list_is_paginated(self):
+        response = self.client.get("/api/vehicles/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 6)  # type: ignore
+        self.assertEqual(len(response.data["results"]), 4)  # type: ignore
+
+    def test_filter_by_type(self):
+        response = self.client.get("/api/vehicles/", {"type": "scooter"})
+        self.assertEqual(response.data["count"], 2)  # type: ignore
+
+    def test_filter_by_agency_and_max_price(self):
+        response = self.client.get(
+            "/api/vehicles/", {"agency": "marina", "max_price": 27}
+        )
+        names = [v["name"] for v in response.data["results"]]  # type: ignore
+        self.assertCountEqual(
+            names, ["Trek Verve+ 3 Lowstep", "Segway Ninebot KickScooter Max G2"]
+        )
+
+    def test_search_matches_name(self):
+        response = self.client.get("/api/vehicles/", {"search": "cowboy"})
+        self.assertEqual(response.data["count"], 1)  # type: ignore
+
+    def test_ordering_by_price_descending(self):
+        response = self.client.get("/api/vehicles/", {"ordering": "-price_per_day_dt"})
+        self.assertEqual(
+            response.data["results"][0]["name"],  # type: ignore
+            "Cube Touring Hybrid ONE 625",  # type: ignore
+        )
+
+    def test_detail_by_slug(self):
+        response = self.client.get("/api/vehicles/cowboy-4-st/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Cowboy 4 ST")  # type: ignore
+
+    def test_inactive_vehicle_is_hidden(self):
+        Vehicle.objects.filter(slug="cowboy-4-st").update(is_active=False)
+        response = self.client.get("/api/vehicles/cowboy-4-st/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_list_uses_two_queries(self):
+        with self.assertNumQueries(2):  # one for the count, one for the page
+            self.client.get("/api/vehicles/")
+
+    def test_anonymous_user_cannot_write(self):
+        response = self.client.post("/api/vehicles/", {})
+        self.assertIn(response.status_code, (401, 403))
