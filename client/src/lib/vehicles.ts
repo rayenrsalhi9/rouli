@@ -1,58 +1,4 @@
-export interface Category {
-  slug: string
-  label: string
-}
-
-export interface AgencySummary {
-  slug: string
-  name: string
-  short_name: string
-}
-
-export interface Agency extends AgencySummary {
-  id: number
-  address: string
-  phone: string
-  opening_hours: string
-  description: string
-  image: string
-  vehicles_count: number
-}
-
-export interface Vehicle {
-  id: string
-  slug: string
-  name: string
-  vehicle_type: 'bike' | 'scooter'
-  category: Category
-  agency: AgencySummary
-  price_per_day_dt: number
-  total_units: number
-  range_km: number
-  max_speed_kmh: number
-  tag: string
-  image: string
-  description: string
-  rating: number
-  reviews_count: number
-}
-
-export interface VehicleDetail extends Vehicle {
-  battery_capacity: string
-  weight_kg: number | null
-  motor: string
-  brakes: string
-  charge_time_h: number | null
-  features: string[]
-  included_accessories: string[]
-}
-
-export interface VehiclePage {
-  count: number
-  next: string | null
-  previous: string | null
-  results: Vehicle[]
-}
+import type { Agency, Category, Vehicle, VehicleDetail, VehiclePage } from '../types'
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
 
@@ -67,11 +13,27 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, { signal })
-  if (!response.ok) {
-    throw new ApiError(response.status, response.statusText)
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { Accept: 'application/json' },
+    signal,
+  })
+  if (!response.ok) throw new ApiError(response.status, response.statusText)
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.toLowerCase().includes('application/json')) {
+    throw new Error(
+      `Réponse API inattendue (${contentType || 'type de contenu inconnu'}). Vérifiez la configuration de l’API.`,
+    )
   }
-  return response.json() as Promise<T>
+
+  try {
+    return await response.json() as T
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error('La réponse de l’API contient un JSON invalide.')
+    }
+    throw error
+  }
 }
 
 export function getVehicles(
@@ -106,11 +68,16 @@ export function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Une erreur inattendue est survenue.'
 }
 
+export function getImageUrl(path: string): string {
+  if (!path || /^https?:\/\//i.test(path)) return path
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (apiUrl && /^https?:\/\//i.test(apiUrl)) return new URL(path, apiUrl).href
+  return path
+}
+
 export function formatDailyPrice(amount: number): string {
-  const formatted = new Intl.NumberFormat('fr-TN', {
-    maximumFractionDigits: 2,
-  }).format(amount)
-  return `${formatted} DT`
+  const value = new Intl.NumberFormat('fr-TN', { maximumFractionDigits: 2 }).format(amount)
+  return `${value} DT`
 }
 
 export function vehicleTypeLabel(type: Vehicle['vehicle_type']): string {
