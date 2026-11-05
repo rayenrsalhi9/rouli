@@ -71,3 +71,24 @@ class VehicleApiTests(APITestCase):
     def test_anonymous_user_cannot_write(self):
         response = self.client.post("/api/vehicles/", {})
         self.assertIn(response.status_code, (401, 403))
+
+    def test_detail_includes_specs(self):
+        response = self.client.get("/api/vehicles/cowboy-4-st/")
+        self.assertEqual(response.data["battery_capacity"], "360 Wh amovible")  # type: ignore
+        self.assertEqual(len(response.data["features"]), 4)  # type: ignore
+
+    def test_list_does_not_include_specs(self):
+        response = self.client.get("/api/vehicles/")
+        self.assertNotIn("features", response.data["results"][0])  # type: ignore
+
+    def test_related_returns_same_type_without_self(self):
+        response = self.client.get("/api/vehicles/cowboy-4-st/related/")
+        self.assertEqual(response.status_code, 200)
+        slugs = [v["slug"] for v in response.data]  # type: ignore
+        self.assertEqual(len(slugs), 3)
+        self.assertNotIn("cowboy-4-st", slugs)
+        self.assertTrue(all(v["vehicle_type"] == "bike" for v in response.data))  # type: ignore
+
+    def test_related_unknown_slug_is_404(self):
+        response = self.client.get("/api/vehicles/nope/related/")
+        self.assertEqual(response.status_code, 404)
