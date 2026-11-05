@@ -30,3 +30,13 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Local API development
+
+Start Django on `127.0.0.1:8000` and run `pnpm dev` from this directory. Vite
+forwards `/api` requests to Django. To use a different API base URL, set
+`VITE_API_BASE_URL` before starting Vite.
+
+Vehicle photos are served from `public/bikes/` and `public/scooters/`. The
+client resolves the API's `/vehicles/<filename>` image paths to those folders
+using each vehicle's type.
