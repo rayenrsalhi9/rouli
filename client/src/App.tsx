@@ -1,5 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import SiteShell from '@/components/SiteShell'
+import Agencies from '@/pages/Agencies'
+import AgencyDetail from '@/pages/AgencyDetail'
 import Home from '@/pages/Home'
 import VehicleDetail from '@/pages/VehicleDetail'
 import Vehicles from '@/pages/Vehicles'
@@ -22,6 +24,8 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/vehicules" element={<Vehicles />} />
       <Route path="/vehicules/:slug" element={<VehicleDetail />} />
+      <Route path="/agences" element={<Agencies />} />
+      <Route path="/agences/:slug" element={<AgencyDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

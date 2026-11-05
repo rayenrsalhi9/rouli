@@ -4,9 +4,11 @@ import SiteShell from '@/components/SiteShell'
 import VehicleCard from '@/components/VehicleCard'
 import {
   getErrorMessage,
-  getVehicleCategories,
+  getAgencies,
+  getCategories,
   getVehicles,
-  type VehicleCategory,
+  type Agency,
+  type Category,
   type VehiclePage,
 } from '@/lib/vehicles'
 
@@ -21,8 +23,12 @@ const SORT_OPTIONS = [
 ]
 
 function Vehicles() {
-  const [categories, setCategories] = useState<VehicleCategory[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [agencies, setAgencies] = useState<Agency[]>([])
+  const [categoryStatus, setCategoryStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
+  const [agencyStatus, setAgencyStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading')
   const [categoryError, setCategoryError] = useState('')
+  const [agencyError, setAgencyError] = useState('')
   const [catalogState, setCatalogState] = useState<{
     key: string
     data?: VehiclePage
@@ -30,7 +36,9 @@ function Vehicles() {
   } | null>(null)
   const [retryCatalog, setRetryCatalog] = useState(0)
   const [retryCategories, setRetryCategories] = useState(0)
+  const [retryAgencies, setRetryAgencies] = useState(0)
   const [type, setType] = useState<VehicleTypeFilter>('')
+  const [agency, setAgency] = useState('')
   const [category, setCategory] = useState('')
   const [maximumPrice, setMaximumPrice] = useState('')
   const [sort, setSort] = useState('name')
@@ -41,17 +49,40 @@ function Vehicles() {
   useEffect(() => {
     const controller = new AbortController()
 
-    getVehicleCategories(controller.signal)
+    getCategories(controller.signal)
       .then((items) => {
         setCategories(items)
         setCategoryError('')
+        setCategoryStatus(items.length > 0 ? 'ready' : 'empty')
       })
       .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setCategoryError(getErrorMessage(reason))
+        if (!controller.signal.aborted) {
+          setCategoryError(getErrorMessage(reason))
+          setCategoryStatus('error')
+        }
       })
 
     return () => controller.abort()
   }, [retryCategories])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    getAgencies(controller.signal)
+      .then((items) => {
+        setAgencies(items)
+        setAgencyError('')
+        setAgencyStatus(items.length > 0 ? 'ready' : 'empty')
+      })
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted) {
+          setAgencyError(getErrorMessage(reason))
+          setAgencyStatus('error')
+        }
+      })
+
+    return () => controller.abort()
+  }, [retryAgencies])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -65,12 +96,13 @@ function Vehicles() {
   const query = useMemo(() => {
     const params = new URLSearchParams({ page: String(page) })
     if (type) params.set('type', type)
+    if (agency) params.set('agency', agency)
     if (category) params.set('category', category)
     if (maximumPrice) params.set('max_price', maximumPrice)
     if (sort) params.set('ordering', sort)
     if (search) params.set('search', search)
     return params.toString()
-  }, [category, maximumPrice, page, search, sort, type])
+  }, [agency, category, maximumPrice, page, search, sort, type])
 
   const requestKey = `${query}:${retryCatalog}`
 
@@ -95,6 +127,7 @@ function Vehicles() {
 
   const resetFilters = () => {
     setType('')
+    setAgency('')
     setCategory('')
     setMaximumPrice('')
     setSort('name')
@@ -131,6 +164,23 @@ function Vehicles() {
               />
             </label>
             <label className="filter-field">
+              Agence
+              <select
+                value={agency}
+                onChange={(event) => {
+                  setAgency(event.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">Toutes</option>
+                {agencyStatus === 'loading' && <option disabled>Chargement…</option>}
+                {agencyStatus === 'empty' && <option disabled>Aucune agence disponible</option>}
+                {agencies.map((item) => (
+                  <option key={item.slug} value={item.slug}>{item.short_name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="filter-field">
               Catégorie
               <select
                 value={category}
@@ -140,6 +190,8 @@ function Vehicles() {
                 }}
               >
                 <option value="">Toutes</option>
+                {categoryStatus === 'loading' && <option disabled>Chargement…</option>}
+                {categoryStatus === 'empty' && <option disabled>Aucune catégorie disponible</option>}
                 {categories.map((item) => (
                   <option key={item.slug} value={item.slug}>{item.label}</option>
                 ))}
@@ -213,7 +265,7 @@ function Vehicles() {
                 Trottinettes
               </button>
             </div>
-            {(type || category || maximumPrice || search) && (
+            {(type || agency || category || maximumPrice || search) && (
               <button className="reset-button" type="button" onClick={resetFilters}>
                 <RotateCcw aria-hidden="true" size={15} />
                 Effacer les filtres
@@ -225,7 +277,29 @@ function Vehicles() {
         {categoryError && (
           <p className="catalog-message" role="alert">
             Les catégories n’ont pas pu être chargées : {categoryError}{' '}
-            <button type="button" className="action-link" onClick={() => setRetryCategories((value) => value + 1)}>
+            <button
+              type="button"
+              className="action-link"
+              onClick={() => {
+                setCategoryStatus('loading')
+                setRetryCategories((value) => value + 1)
+              }}
+            >
+              Réessayer
+            </button>
+          </p>
+        )}
+        {agencyError && (
+          <p className="catalog-message" role="alert">
+            Les agences n’ont pas pu être chargées : {agencyError}{' '}
+            <button
+              type="button"
+              className="action-link"
+              onClick={() => {
+                setAgencyStatus('loading')
+                setRetryAgencies((value) => value + 1)
+              }}
+            >
               Réessayer
             </button>
           </p>

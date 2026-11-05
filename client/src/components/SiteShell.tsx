@@ -7,6 +7,7 @@ interface SiteShellProps {
 function SiteShell({ children }: SiteShellProps) {
   const location = useLocation()
   const isCatalog = location.pathname.startsWith('/vehicules')
+  const isAgencies = location.pathname.startsWith('/agences')
 
   return (
     <div className="site-shell">
@@ -23,6 +24,13 @@ function SiteShell({ children }: SiteShellProps) {
             >
               Les véhicules
             </Link>
+            <Link
+              className={isAgencies ? 'site-nav__catalog' : undefined}
+              to="/agences"
+              aria-current={isAgencies ? 'page' : undefined}
+            >
+              Les agences
+            </Link>
             <span>Monastir</span>
           </nav>
         </div>
@@ -35,6 +43,7 @@ function SiteShell({ children }: SiteShellProps) {
           </Link>
           <p>Des deux-roues à louer, au rythme de Monastir.</p>
           <Link to="/vehicules">Parcourir la flotte</Link>
+          <Link to="/agences">Découvrir les agences</Link>
         </div>
       </footer>
     </div>
