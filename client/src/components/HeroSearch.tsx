@@ -80,6 +80,8 @@ export const HeroSearch = () => {
               className="min-h-12 rounded-xl border border-neutral-200 bg-neutral-50 px-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink disabled:opacity-60"
             >
               <option value="">Toutes les agences</option>
+              {agencies === null && <option value="" disabled>{error ? 'Agences indisponibles' : 'Chargement des agences…'}</option>}
+              {agencies?.length === 0 && <option value="" disabled>Aucune agence disponible</option>}
               {agencies?.map((item) => (
                 <option key={item.slug} value={item.slug}>{item.short_name}</option>
               ))}

@@ -10,7 +10,7 @@ export interface AgencySummary {
 }
 
 export interface Agency extends AgencySummary {
-  id: number
+  id: string
   address: string
   phone: string
   opening_hours: string
@@ -38,10 +38,10 @@ export interface Vehicle {
 }
 
 export interface VehicleDetail extends Vehicle {
-  battery_capacity: string
+  battery_capacity: string | null
   weight_kg: number | null
-  motor: string
-  brakes: string
+  motor: string | null
+  brakes: string | null
   charge_time_h: number | null
   features: string[]
   included_accessories: string[]

@@ -13,7 +13,7 @@ import {
 } from "react";
 import { cn } from "@/lib/utils";
 import { Area, type AreaProps } from "./area";
-import { buildChartTable, type ChartA11yData } from "./chart-a11y";
+import { buildChartTable } from "./chart-a11y";
 import type { LineConfig, Margin } from "./chart-context";
 import { ChartLoadingLabel } from "./chart-loading-label";
 import { ParentSize } from "./chart-parent-size";

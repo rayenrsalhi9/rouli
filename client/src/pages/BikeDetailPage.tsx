@@ -104,7 +104,7 @@ export function BikeDetailPage() {
                       ['Temps de charge', vehicle.charge_time_h === null ? '' : `${vehicle.charge_time_h} h`],
                       ['Autonomie', `${vehicle.range_km} km`],
                       ['Vitesse maximale', `${vehicle.max_speed_kmh} km/h`],
-                    ].filter(([, value]) => value).map(([label, value]) => (
+                    ].filter(([, value]) => value !== null && value !== undefined && value !== '').map(([label, value]) => (
                       <div key={label} className="flex justify-between gap-4 py-3 text-sm">
                         <dt className="text-neutral-500">{label}</dt><dd className="text-right font-medium text-neutral-900">{value}</dd>
                       </div>
@@ -112,13 +112,21 @@ export function BikeDetailPage() {
                   </dl>
                 </section>
                 <div className="space-y-8">
-                  {vehicle.features.length > 0 && <section aria-labelledby="vehicle-features"><h2 id="vehicle-features" className="font-display text-xl font-semibold text-neutral-900">Équipements et fonctionnalités</h2><ul className="mt-4 list-inside list-disc space-y-2 text-sm leading-relaxed text-neutral-600">{vehicle.features.map((feature) => <li key={feature}>{feature}</li>)}</ul></section>}
-                  {vehicle.included_accessories.length > 0 && <section aria-labelledby="vehicle-accessories"><h2 id="vehicle-accessories" className="font-display text-xl font-semibold text-neutral-900">Accessoires inclus</h2><ul className="mt-4 list-inside list-disc space-y-2 text-sm leading-relaxed text-neutral-600">{vehicle.included_accessories.map((item) => <li key={item}>{item}</li>)}</ul></section>}
+                  {vehicle.features.length > 0 && <section aria-labelledby="vehicle-features"><h2 id="vehicle-features" className="font-display text-xl font-semibold text-neutral-900">Équipements et fonctionnalités</h2><ul className="mt-4 list-inside list-disc space-y-2 text-sm leading-relaxed text-neutral-600">{vehicle.features.map((feature, index) => <li key={`${feature}-${index}`}>{feature}</li>)}</ul></section>}
+                  {vehicle.included_accessories.length > 0 && <section aria-labelledby="vehicle-accessories"><h2 id="vehicle-accessories" className="font-display text-xl font-semibold text-neutral-900">Accessoires inclus</h2><ul className="mt-4 list-inside list-disc space-y-2 text-sm leading-relaxed text-neutral-600">{vehicle.included_accessories.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></section>}
                 </div>
               </div>
             </article>
-            {relatedResult?.error && <p role="alert" className="mt-8 text-sm text-red-800">Les véhicules similaires n’ont pas pu être chargés : {relatedResult.error}</p>}
-            {relatedResult?.vehicles && relatedResult.vehicles.length > 0 && <section className="mt-14" aria-labelledby="related-title"><div className="mb-6 flex items-end justify-between gap-4"><h2 id="related-title" className="font-display text-2xl font-semibold text-neutral-900">Autres véhicules à découvrir</h2><Link to="/vehicules" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-ink">Catalogue <ArrowRight aria-hidden="true" className="size-4" /></Link></div><div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">{relatedResult.vehicles.map((item) => <VehicleCard key={item.slug} vehicle={item} />)}</div></section>}
+            <section className="mt-14" aria-labelledby="related-title" aria-busy={!relatedResult}>
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <h2 id="related-title" className="font-display text-2xl font-semibold text-neutral-900">Autres véhicules à découvrir</h2>
+                <Link to="/vehicules" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-ink">Catalogue <ArrowRight aria-hidden="true" className="size-4" /></Link>
+              </div>
+              {!relatedResult && <p role="status" className="text-sm text-neutral-600">Chargement des véhicules similaires…</p>}
+              {relatedResult?.error && <p role="alert" className="text-sm text-red-800">Les véhicules similaires n’ont pas pu être chargés : {relatedResult.error}</p>}
+              {relatedResult?.vehicles?.length === 0 && <p role="status" className="text-sm text-neutral-600">Aucun véhicule similaire disponible.</p>}
+              {relatedResult?.vehicles && relatedResult.vehicles.length > 0 && <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">{relatedResult.vehicles.map((item) => <VehicleCard key={item.slug} vehicle={item} />)}</div>}
+            </section>
           </>
         )}
         <Link to="/vehicules" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-brand-ink"><ArrowLeft aria-hidden="true" className="size-4" /> Retour au catalogue</Link>

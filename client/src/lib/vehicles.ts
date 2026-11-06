@@ -69,7 +69,7 @@ export function getErrorMessage(error: unknown): string {
 }
 
 export function getImageUrl(path: string): string {
-  if (!path || /^https?:\/\//i.test(path)) return path
+  if (!path || /^https?:\/\//i.test(path) || /^\/(bikes|scooters|agencies)\//.test(path)) return path
   const apiUrl = import.meta.env.VITE_API_URL
   if (apiUrl && /^https?:\/\//i.test(apiUrl)) return new URL(path, apiUrl).href
   return path

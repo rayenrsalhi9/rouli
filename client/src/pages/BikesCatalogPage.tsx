@@ -20,6 +20,8 @@ export const BikesCatalogPage = () => {
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [supportError, setSupportError] = useState('')
+  const [supportLoading, setSupportLoading] = useState(true)
+  const [supportLoaded, setSupportLoaded] = useState(false)
   const [retryOptions, setRetryOptions] = useState(0)
   const [sort, setSort] = useState('name')
   const [maxPrice, setMaxPrice] = useState('')
@@ -37,17 +39,33 @@ export const BikesCatalogPage = () => {
 
   useEffect(() => {
     const controller = new AbortController()
+    setSupportLoading(true)
     Promise.all([getAgencies(controller.signal), getCategories(controller.signal)])
       .then(([agencyItems, categoryItems]) => {
         setAgencies(agencyItems)
         setCategories(categoryItems)
         setSupportError('')
+        setSupportLoaded(true)
       })
       .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setSupportError(getErrorMessage(reason))
+        if (!controller.signal.aborted) {
+          setSupportError(getErrorMessage(reason))
+          setSupportLoaded(false)
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setSupportLoading(false)
       })
     return () => controller.abort()
   }, [retryOptions])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setSearch(draftSearch.trim())
+      setPage(1)
+    }, 300)
+    return () => window.clearTimeout(timeout)
+  }, [draftSearch])
 
   const params = useMemo(() => {
     const query = new URLSearchParams({ page: String(page), ordering: sort })
@@ -170,7 +188,10 @@ export const BikesCatalogPage = () => {
           </div>
         </form>
 
+        {supportLoading && <p role="status" className="mb-4 text-sm text-neutral-600">Chargement des filtres…</p>}
         {supportError && <p role="alert" className="mb-5 text-sm text-red-800">Les filtres n’ont pas pu être chargés : {supportError} <button className="underline" onClick={() => setRetryOptions((value) => value + 1)}>Réessayer</button></p>}
+        {supportLoaded && agencies.length === 0 && <p role="status" className="mb-2 text-sm text-neutral-600">Aucune agence disponible pour filtrer.</p>}
+        {supportLoaded && categories.length === 0 && <p role="status" className="mb-4 text-sm text-neutral-600">Aucune catégorie disponible pour filtrer.</p>}
         <section aria-label="Résultats du catalogue" aria-busy={!current}>
           {!current && <p role="status" className="py-10 text-neutral-600">Chargement des véhicules…</p>}
           {error && <div role="alert" className="rounded-2xl border border-red-200 bg-white p-6 text-red-900"><h2 className="font-semibold">Le catalogue est indisponible.</h2><p className="mt-2 text-sm">{error}</p><button className="mt-4 underline" onClick={() => setRetryVehicles((value) => value + 1)}>Réessayer</button></div>}
